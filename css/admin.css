@@ -1,0 +1,193 @@
+/* ================================
+           VIEW 5: ADMIN (PAINEL DO CAPITÃO)
+           ================================ */
+#view-admin {
+    background-color: var(--bg-primary);
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: 120px;
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.admin-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+}
+
+.admin-back-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.admin-header-title {
+    font-size: 0.875rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-main);
+    text-transform: uppercase;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.admin-content-area {
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.admin-overview-card {
+    background-color: var(--bg-card);
+    border-radius: 24px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.admin-card-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.admin-card-number {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: var(--accent-volt);
+}
+
+.admin-card-subtitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+.admin-pace-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.admin-section-title {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: var(--accent-volt);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.admin-pace-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-pace-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.admin-pace-count {
+    color: var(--text-secondary);
+}
+
+.admin-progress-bg {
+    width: 100%;
+    height: 8px;
+    background-color: #222222;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.admin-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+}
+
+/* Progress Bar Colors */
+.fill-coelho {
+    background-color: var(--text-main);
+    width: 33%;
+}
+
+.fill-medio {
+    background-color: var(--accent-volt);
+    width: 45%;
+}
+
+.fill-social {
+    background-color: var(--text-secondary);
+    width: 15%;
+}
+
+.fill-caminhada {
+    background-color: #444444;
+    width: 5%;
+}
+
+.admin-bottom-action {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
+    z-index: 10;
+}
+
+.admin-massive-cta {
+    width: 100%;
+    background-color: var(--accent-volt);
+    color: var(--bg-primary);
+    border: none;
+    border-radius: 100px;
+    padding: 18px 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.admin-massive-cta:active {
+    transform: scale(0.98);
+}
+
+.admin-cta-title {
+    font-family: inherit;
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.admin-cta-subtitle {
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    opacity: 0.8;
+}

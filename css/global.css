@@ -1,30 +1,69 @@
-/* global.css */
-:root {
-  --bg-primary: #000000;
-  --bg-card: #111111;
-  --bg-card-hover: #1A1A1A;
-  --accent-volt: #CCFF00;
-  --text-main: #FFFFFF;
-  --text-secondary: #A0A0A0;
-}
+/* ================================
+           GLOBAL VARIABLES & NORMALIZATION
+           ================================ */
+        :root {
+            --bg-primary: #000000;
+            --bg-card: #111111;
+            --bg-card-hover: #1A1A1A;
+            --accent-volt: #CCFF00;
+            --text-main: #FFFFFF;
+            --text-secondary: #A0A0A0;
+        }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-body {
-  font-family: 'Inter', 'SF Pro Display', 'Montserrat', sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-main);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
-  overflow-x: hidden;
-}
+        body {
+            font-family: 'Inter', 'SF Pro Display', 'Montserrat', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+            overflow-x: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
 
-/* Common utility classes */
-.hidden {
-  display: none !important;
-}
+        /* Routing/State Management */
+        .spa-view {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .spa-view.hidden {
+            opacity: 0;
+            pointer-events: none;
+            display: none !important;
+        }
+
+        /* Developer Tool (Top-left absolute) */
+        .dev-trigger-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background-color: #222222;
+            color: #777777;
+            border: 1px solid #333333;
+            padding: 4px 8px;
+            font-size: 0.65rem;
+            border-radius: 4px;
+            z-index: 999;
+            cursor: pointer;
+            font-family: monospace;
+            opacity: 0.6;
+        }
+
+        .dev-trigger-btn:hover {
+            opacity: 1;
+        }
