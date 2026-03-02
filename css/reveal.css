@@ -1,0 +1,226 @@
+/* reveal.css */
+.reveal-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-primary);
+    overflow: hidden;
+}
+
+/* Photo Area */
+.photo-area {
+    height: 75%;
+    position: relative;
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+    overflow: hidden;
+    background-color: #222222;
+    /* Fallback */
+    /* Reveal Animation properties */
+    transform: scale(0.95);
+    opacity: 0;
+    animation: revealPhoto 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes revealPhoto {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.photo-placeholder {
+    width: 100%;
+    height: 100%;
+    /* Replace with an actual background image when integrating */
+    background: linear-gradient(45deg, #111111, #333333);
+    background-size: cover;
+    background-position: center;
+}
+
+.vignette-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+    pointer-events: none;
+}
+
+/* The Tréximo Stamp */
+.treximo-stamp {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    /* Reveal Animation properties */
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: 0.3s;
+}
+
+@keyframes slideFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stamp-row {
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.stamp-row.tag {
+    font-size: 0.75rem;
+    color: var(--text-main);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.stamp-row.distance {
+    font-size: 2.5rem;
+    color: var(--text-main);
+    letter-spacing: -1px;
+}
+
+.stamp-row.pace {
+    font-size: 0.875rem;
+    color: var(--accent-volt);
+    letter-spacing: 0.5px;
+}
+
+/* Interaction Zone */
+.interaction-zone {
+    height: 25%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+
+    /* Reveal Animation properties */
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.reaction-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+
+.reaction-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--bg-card);
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.reaction-btn:active {
+    transform: scale(0.9);
+}
+
+.reaction-btn.reacted {
+    background-color: var(--accent-volt);
+    transform: scale(1.1);
+}
+
+.plus-one {
+    position: absolute;
+    top: -20px;
+    color: var(--accent-volt);
+    font-weight: 900;
+    font-size: 1.25rem;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.plus-one.animate {
+    animation: floatUp 0.8s ease-out forwards;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateY(-20px) scale(1.2);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-40px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Share Button reused from global/grupo styles but customized */
+.share-btn {
+    width: 100%;
+    background-color: var(--accent-volt);
+    color: var(--bg-primary);
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 100px;
+    padding: 20px 0;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    letter-spacing: -0.5px;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--accent-volt);
+    color: var(--bg-primary);
+    padding: 16px 24px;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: 0.875rem;
+    z-index: 100;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(204, 255, 0, 0.2);
+    /* opacity transitioned for appear/disappear */
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.toast.hidden {
+    opacity: 0;
+    pointer-events: none;
+}

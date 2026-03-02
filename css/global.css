@@ -1,0 +1,30 @@
+/* global.css */
+:root {
+  --bg-primary: #000000;
+  --bg-card: #111111;
+  --bg-card-hover: #1A1A1A;
+  --accent-volt: #CCFF00;
+  --text-main: #FFFFFF;
+  --text-secondary: #A0A0A0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', 'SF Pro Display', 'Montserrat', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Common utility classes */
+.hidden {
+  display: none !important;
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>tréximo - Grupo</title>
+    <!-- Use Google Fonts for Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/grupo.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Navigation -->
+        <header class="top-nav">
+            <button class="nav-tab text-secondary">FY</button>
+            <button class="nav-tab active">GRUPO</button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="content-area">
+            <!-- Event Hero Section -->
+            <section class="hero-section">
+                <h1 class="hero-title">TREINO DE TERÇA</h1>
+                <p class="hero-subtitle">19:30 &bull; Parque Eduardo VII</p>
+            </section>
+
+            <!-- The "Trophy" Metric Card -->
+            <section class="metric-card">
+                <h2 class="card-label">KM TOTAIS ESTE MÊS</h2>
+                <div class="massive-number">1,240 KM</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </section>
+
+            <!-- Loyalty Podium -->
+            <section class="streak-section">
+                <div class="avatar-row">
+                    <div class="streak-item">
+                        <div class="avatar"></div>
+                        <div class="streak-info">
+                            <span class="flame">🔥</span> <span class="streak-count">10</span>
+                        </div>
+                    </div>
+                    <div class="streak-item active-streak">
+                        <div class="avatar highlight"></div>
+                        <div class="streak-info">
+                            <span class="flame">🔥</span> <span class="streak-count">12</span>
+                        </div>
+                    </div>
+                    <div class="streak-item">
+                        <div class="avatar"></div>
+                        <div class="streak-info">
+                            <span class="flame">🔥</span> <span class="streak-count">8</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Action CTA -->
+        <div class="fixed-bottom-action">
+            <button id="inButton" class="massive-cta">IN</button>
+        </div>
+
+        <!-- Interactive Overlay State (Pace Selector) -->
+        <div id="modalOverlay" class="overlay-backdrop hidden"></div>
+        <div id="paceModal" class="bottom-sheet hidden">
+            <div class="modal-handle"></div>
+            <h2 class="modal-title">ESCOLHE O TEU RITMO</h2>
+            <div class="pace-options">
+                <button class="pace-btn">Coelho (&lt; 4:30/km)</button>
+                <button class="pace-btn">Médio (5:00 - 6:00/km)</button>
+                <button class="pace-btn">Social (&gt; 6:30/km)</button>
+                <button class="pace-btn">Caminhada</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/grupo.js"></script>
+</body>
+</html>
