@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- SUPABASE CONFIG ---
+    const supabaseUrl = 'https://uslkwgjhiokbveaegsbn.supabase.co';
+    const supabaseKey = 'sb_publishable_o8KSgp6Ij2Ia3llmsXGwLQ_jA14M8jS';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
     // --- STATE MANAGEMENT / ROUTING ---
     const viewHome = document.getElementById('view-home');
     const viewCamera = document.getElementById('view-camera');
@@ -57,12 +62,25 @@ document.addEventListener('DOMContentLoaded', () => {
     homeModalOverlay.addEventListener('click', closeHomeModal);
 
     homePaceBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
+            const selectedPace = btn.textContent.trim();
+
+            // optimistic UI update
             closeHomeModal();
             homeInButton.textContent = 'DENTRO';
             homeInButton.style.color = '#CCFF00';
             homeInButton.style.backgroundColor = '#333333';
             homeInButton.classList.add('checked-in');
+
+            // Insert to Supabase Checkins Table
+            try {
+                const { error } = await supabase.from('checkins').insert([
+                    { pace: selectedPace, name: "Atleta Anonymous" }
+                ]);
+                if (error) console.error("Error inserting check-in:", error);
+            } catch (err) {
+                console.error("Supabase insert error:", err);
+            }
         });
     });
 
@@ -186,14 +204,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- ADMIN EVENT LOGIC ---
+    // --- ADMIN EVENT LOGIC (WITH SUPABASE) ---
     const viewAdmin = document.getElementById('view-admin');
     const adminTriggerBtn = document.getElementById('adminTriggerBtn');
     const adminBackBtn = document.getElementById('adminBackBtn');
     const adminStartBtn = viewAdmin.querySelector('.admin-massive-cta');
 
+    // DOM Elements for Supabase Data Injection
+    const adminOverviewNumber = viewAdmin.querySelector('.admin-card-number');
+    const paceCounts = viewAdmin.querySelectorAll('.admin-pace-count'); // [0:Coelho, 1:Medio, 2:Social, 3:Caminhada]
+    const fillCoelho = viewAdmin.querySelector('.fill-coelho');
+    const fillMedio = viewAdmin.querySelector('.fill-medio');
+    const fillSocial = viewAdmin.querySelector('.fill-social');
+    const fillCaminhada = viewAdmin.querySelector('.fill-caminhada');
+
+    async function loadAdminStats() {
+        try {
+            const { data, error } = await supabase.from('checkins').select('pace');
+            if (error) throw error;
+
+            let total = data.length;
+            let coelho = 0, medio = 0, social = 0, caminhada = 0;
+
+            data.forEach(row => {
+                if (row.pace.includes('Coelho')) coelho++;
+                else if (row.pace.includes('Médio')) medio++;
+                else if (row.pace.includes('Social')) social++;
+                else if (row.pace.includes('Caminhada')) caminhada++;
+            });
+
+            // Set text counters
+            adminOverviewNumber.textContent = total;
+            if (paceCounts.length >= 4) {
+                paceCounts[0].textContent = coelho;
+                paceCounts[1].textContent = medio;
+                paceCounts[2].textContent = social;
+                paceCounts[3].textContent = caminhada;
+            }
+
+            // Calculate and Apply Percentages
+            fillCoelho.style.width = total > 0 ? `${(coelho / total) * 100}%` : '0%';
+            fillMedio.style.width = total > 0 ? `${(medio / total) * 100}%` : '0%';
+            fillSocial.style.width = total > 0 ? `${(social / total) * 100}%` : '0%';
+            fillCaminhada.style.width = total > 0 ? `${(caminhada / total) * 100}%` : '0%';
+
+        } catch (err) {
+            console.error("Supabase fetch error:", err);
+        }
+    }
+
     adminTriggerBtn.addEventListener('click', () => {
         showView(viewAdmin);
+        loadAdminStats(); // Fetch live Supabase stats when Admin opens
     });
 
     adminBackBtn.addEventListener('click', () => {
