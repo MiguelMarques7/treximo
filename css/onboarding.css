@@ -1,0 +1,76 @@
+/* Onboarding View Styles */
+#view-onboarding {
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 24px;
+}
+
+.onboarding-content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: -15vh;
+}
+
+.onboarding-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.onboarding-subtitle {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.onboarding-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.onboarding-input {
+    background-color: var(--bg-card);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.onboarding-input:focus {
+    border-color: var(--accent-volt);
+}
+
+.onboarding-input::placeholder {
+    color: #555;
+    font-weight: 400;
+}
+
+.onboarding-btn {
+    background-color: var(--accent-volt);
+    color: #000;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 8px;
+    padding: 18px;
+    margin-top: 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: opacity 0.2s;
+}
+
+.onboarding-btn:active {
+    opacity: 0.8;
+}

@@ -9,11 +9,7 @@
     overflow-y: auto;
     padding-bottom: 120px;
     z-index: 1000;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    padding-top: var(--safe-top);
 }
 
 .admin-top-nav {
@@ -21,6 +17,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 24px;
+    padding-top: var(--safe-top) !important;
+    height: calc(60px + var(--safe-top));
 }
 
 .admin-back-btn {
@@ -125,6 +123,14 @@
     border-radius: 4px;
 }
 
+.admin-pace-names {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+    line-height: 1.4;
+    margin-top: 2px;
+}
+
 /* Progress Bar Colors */
 .fill-coelho {
     background-color: var(--text-main);
@@ -149,8 +155,10 @@
 .admin-bottom-action {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    max-width: 480px;
     padding: 24px;
     background: linear-gradient(to top, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
     z-index: 10;

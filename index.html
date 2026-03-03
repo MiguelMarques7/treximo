@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/feed.css">
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/onboarding.css">
 </head>
 
 <body>
@@ -31,7 +32,23 @@
 
     <div id="globalToast" class="global-toast hidden">STORY GERADA COM SUCESSO.</div>
 
-    <div id="view-home" class="spa-view">
+    <div id="view-onboarding" class="spa-view hidden">
+        <main class="onboarding-content">
+            <h1 class="onboarding-title">BEM-VINDO</h1>
+            <p class="onboarding-subtitle">INTRODUZ OS TEUS DADOS PARA ENTRAR NO GRUPO.</p>
+
+            <div class="onboarding-form">
+                <input type="text" id="onboardingName" class="onboarding-input" placeholder="Teu Nome (ex: Miguel)"
+                    autocomplete="off">
+                <input type="text" id="onboardingGroup" class="onboarding-input"
+                    placeholder="Código do Grupo (ex: TRX01)" autocomplete="off" autocapitalize="characters">
+
+                <button id="onboardingSubmit" class="onboarding-btn">ENTRAR NO GRUPO</button>
+            </div>
+        </main>
+    </div>
+
+    <div id="view-home" class="spa-view hidden">
         <header class="home-top-nav">
             <button class="home-nav-tab text-secondary">FY</button>
             <button class="home-nav-tab active">GRUPO</button>
@@ -98,6 +115,10 @@
     </div>
 
     <div id="view-camera" class="spa-view hidden">
+        <video id="camVideoFeed" autoplay playsinline muted
+            style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <canvas id="camCanvas" class="hidden" style="display: none;"></canvas>
+
         <header class="cam-hud-header">
             <div class="cam-timer-warning">
                 <div class="cam-pulsing-circle"></div>
@@ -130,6 +151,19 @@
         <div id="camLoadingOverlay" class="cam-system-overlay hidden">
             <p>A ENVIAR...</p>
         </div>
+    </div>
+
+    <div id="view-reward" class="spa-view hidden"
+        style="background-color: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+        <h2
+            style="font-size: 2rem; font-weight: 900; margin-bottom: 24px; color: var(--accent-volt); text-transform: uppercase; letter-spacing: -1px;">
+            Missão Cumprida</h2>
+        <div
+            style="width: 90%; max-width: 400px; aspect-ratio: 9/16; background-color: var(--bg-card); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <img id="rewardImage" src="" alt="Foto de Grupo" style="width: 100%; height: 100%; object-fit: cover;" />
+        </div>
+        <button id="rewardBackBtn" class="onboarding-btn" style="width: 90%; max-width: 400px; margin-top: 32px;">VOLTAR
+            AO FEED</button>
     </div>
 
     <div id="view-reveal" class="spa-view hidden">
@@ -253,6 +287,7 @@
                     <div class="admin-progress-bg">
                         <div class="admin-progress-fill fill-coelho"></div>
                     </div>
+                    <div class="admin-pace-names" id="names-coelho"></div>
                 </div>
 
                 <div class="admin-pace-item">
@@ -263,6 +298,7 @@
                     <div class="admin-progress-bg">
                         <div class="admin-progress-fill fill-medio"></div>
                     </div>
+                    <div class="admin-pace-names" id="names-medio"></div>
                 </div>
 
                 <div class="admin-pace-item">
@@ -273,6 +309,7 @@
                     <div class="admin-progress-bg">
                         <div class="admin-progress-fill fill-social"></div>
                     </div>
+                    <div class="admin-pace-names" id="names-social"></div>
                 </div>
 
                 <div class="admin-pace-item">
@@ -283,6 +320,7 @@
                     <div class="admin-progress-bg">
                         <div class="admin-progress-fill fill-caminhada"></div>
                     </div>
+                    <div class="admin-pace-names" id="names-caminhada"></div>
                 </div>
             </div>
         </main>

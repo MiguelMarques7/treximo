@@ -38,13 +38,22 @@ body {
 .spa-view {
     width: 100vw;
     height: 100vh;
+    max-width: 480px;
+    /* Force mobile dimensions on Desktop/Tablets */
+    margin: 0 auto;
+    /* Center it */
     position: absolute;
     top: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     opacity: 1;
     transition: opacity 0.4s ease;
     overflow-y: auto;
     overflow-x: hidden;
+    background-color: var(--bg-primary);
+    /* Ensure bounds are painted */
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    /* Look nice on desktop */
 }
 
 .spa-view.hidden {
@@ -72,4 +81,8 @@ body {
 
 .dev-trigger-btn:hover {
     opacity: 1;
+}
+
+.hidden {
+    display: none !important;
 }

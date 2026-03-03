@@ -9,17 +9,121 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewHome = document.getElementById('view-home');
     const viewCamera = document.getElementById('view-camera');
     const viewReveal = document.getElementById('view-reveal');
+    const viewOnboarding = document.getElementById('view-onboarding');
+    const viewReward = document.getElementById('view-reward');
 
     function showView(viewElement) {
         // Hide all
         viewHome.classList.add('hidden');
-        viewCamera.classList.add('hidden');
-        viewReveal.classList.add('hidden');
+        if (viewCamera) viewCamera.classList.add('hidden');
+        if (viewReveal) viewReveal.classList.add('hidden');
+        const viewFeed = document.getElementById('view-feed');
+        if (viewFeed) viewFeed.classList.add('hidden');
+        const viewAdmin = document.getElementById('view-admin');
+        if (viewAdmin) viewAdmin.classList.add('hidden');
+        if (viewOnboarding) viewOnboarding.classList.add('hidden');
+        if (viewReward) viewReward.classList.add('hidden');
 
         // Show target
         setTimeout(() => {
             viewElement.classList.remove('hidden');
         }, 50); // slight delay for smooth transition setup
+    }
+
+    // --- INIT APP LOGIC ---
+    const storedName = localStorage.getItem('userName');
+    const storedGroup = localStorage.getItem('groupCode');
+
+    if (!storedName || !storedGroup) {
+        viewOnboarding.classList.remove('hidden');
+        viewHome.classList.add('hidden');
+    } else {
+        viewHome.classList.remove('hidden');
+        viewOnboarding.classList.add('hidden');
+    }
+
+    // --- SUPABASE REALTIME (ROLETA) ---
+    if (storedName && storedGroup) {
+        supabase.channel('public:roulette_spins')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'roulette_spins' },
+                (payload) => handleRoletaEvent(payload)
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'roulette_spins' },
+                (payload) => handleRoletaEvent(payload)
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Realtime ligado para a Roleta no grupo:', storedGroup);
+                }
+            });
+
+        function handleRoletaEvent(payload) {
+            const newRow = payload.new;
+
+            // Ignore if it's for another group
+            if (newRow.group_code !== storedGroup) return;
+
+            // REWARD BROADCAST MATCH (IF PHOTO EXISTS)
+            if (newRow.photo_url) {
+                const rewardImg = document.getElementById('rewardImage');
+                if (rewardImg) rewardImg.src = newRow.photo_url;
+
+                showView(viewReward);
+                return;
+            }
+
+            // SELECTION BROADCAST MATCH
+            if (newRow.chosen_name === storedName) {
+                // VICTIM FLOW
+                showView(viewCamera);
+                startCameraFeed(); // Mount the UserMedia feed
+
+                // Show notification briefly without native alert for better UX
+                const toast = document.getElementById('globalToast');
+                if (toast) {
+                    toast.textContent = "FOSTE ESCOLHIDO! Tira a foto!";
+                    toast.classList.remove('hidden');
+                    toast.style.backgroundColor = 'var(--text-main)';
+                    toast.style.color = 'var(--bg-primary)';
+
+                    setTimeout(() => {
+                        toast.classList.add('hidden');
+                        toast.style.backgroundColor = '';
+                        toast.style.color = '';
+                    }, 4000);
+                }
+
+                // Trigger camera start logic (mocked logic already exists, we start countdown)
+                startCameraCountdown();
+            } else {
+                // OTHER USERS FLOW
+                // Don't alert if we're just updating the photo_url payload (which starts the reward broadcast)
+                if (!newRow.photo_url) {
+                    alert(`O Capitão escolheu: ${newRow.chosen_name}! Prepara-te para a foto de grupo.`);
+                }
+            }
+        }
+    }
+
+    // --- ONBOARDING EVENT LOGIC ---
+    const onboardingSubmit = document.getElementById('onboardingSubmit');
+    if (onboardingSubmit) {
+        onboardingSubmit.addEventListener('click', () => {
+            const nameInput = document.getElementById('onboardingName').value.trim();
+            const groupInput = document.getElementById('onboardingGroup').value.trim().toUpperCase();
+
+            if (nameInput && groupInput) {
+                localStorage.setItem('userName', nameInput);
+                localStorage.setItem('groupCode', groupInput);
+                showView(viewHome);
+            } else {
+                alert('Por favor, preenche o teu Nome e Código do Grupo.');
+            }
+        });
     }
 
     // --- DEV TRIGGER ROUTING ---
@@ -42,13 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
             homePaceModal.classList.remove('hidden');
             // Allow browser paint
             setTimeout(() => {
-                homePaceModal.style.transform = 'translateY(0)';
+                homePaceModal.style.transform = 'translate(-50%, 0)';
             }, 10);
         }
     });
 
     const closeHomeModal = () => {
-        homePaceModal.style.transform = 'translateY(100%)';
+        homePaceModal.style.transform = 'translate(-50%, 100%)';
         homeModalOverlay.style.opacity = '0';
 
         setTimeout(() => {
@@ -74,8 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Insert to Supabase Checkins Table
             try {
+                const uName = localStorage.getItem('userName') || "Atleta Anonymous";
+                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+
                 const { error } = await supabase.from('checkins').insert([
-                    { pace: selectedPace, name: "Atleta Anonymous" }
+                    { pace: selectedPace, name: uName, group_code: gCode }
                 ]);
                 if (error) console.error("Error inserting check-in:", error);
             } catch (err) {
@@ -85,12 +192,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- CAMERA EVENT LOGIC ---
+    // --- CAMERA & UPLOAD LOGIC ---
+    const camVideoFeed = document.getElementById('camVideoFeed');
+    const camCanvas = document.getElementById('camCanvas');
     const camCountdownEl = document.getElementById('camCountdown');
     const camShutterBtn = document.getElementById('camShutterBtn');
     const camFlashOverlay = document.getElementById('camFlashOverlay');
     const camLoadingOverlay = document.getElementById('camLoadingOverlay');
     let timerInterval;
+    let cameraStream = null;
+
+    async function startCameraFeed() {
+        if (camLoadingOverlay) camLoadingOverlay.classList.add('hidden'); // Garante que a vista está limpa
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' } // Tenta usar a câmara traseira
+                });
+                if (camVideoFeed) camVideoFeed.srcObject = cameraStream;
+            } catch (err) {
+                console.error("Erro ao aceder à câmara:", err);
+                alert("Permissão de câmara negada ou dispositivo indisponível.");
+            }
+        }
+    }
+
+    function stopCameraFeed() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+    }
 
     function startCameraCountdown() {
         let timeLeft = 60;
@@ -109,32 +241,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    camShutterBtn.addEventListener('click', () => {
-        clearInterval(timerInterval); // Stop clock
+    camShutterBtn.addEventListener('click', async () => {
+        clearInterval(timerInterval); // Para o relógio
 
-        // Flash
+        // Efeito de Flash visual
         camFlashOverlay.classList.remove('hidden');
         camFlashOverlay.classList.add('active');
 
-        setTimeout(() => {
+        setTimeout(async () => {
             camFlashOverlay.classList.remove('active');
             setTimeout(() => camFlashOverlay.classList.add('hidden'), 100);
 
-            // Loading State
+            // Agora sim, o utilizador clicou, trancamos o ecrã!
             camLoadingOverlay.classList.remove('hidden');
 
-            // Route to Reveal after 1.5s
-            setTimeout(() => {
-                camLoadingOverlay.classList.add('hidden');
-                showView(viewReveal);
+            // --- INÍCIO DA CAPTURA E UPLOAD ---
+            try {
+                console.log("1. A iniciar o desenho no Canvas...");
+                if (!camVideoFeed || !camCanvas) throw new Error("Falta a tag video ou canvas no HTML");
 
-                // Hide Dev Trigger on reveal since flow is done
-                devTriggerBtn.style.display = 'none';
-            }, 1500);
+                // Desenha o frame do vídeo na folha invisível
+                camCanvas.width = camVideoFeed.videoWidth || 1080;
+                camCanvas.height = camVideoFeed.videoHeight || 1920;
+                const ctx = camCanvas.getContext('2d');
+                ctx.drawImage(camVideoFeed, 0, 0, camCanvas.width, camCanvas.height);
 
-        }, 100);
+                console.log("2. Canvas desenhado. A converter para JPEG...");
+
+                // Comprime a foto
+                const imageBlob = await new Promise(resolve => camCanvas.toBlob(resolve, 'image/jpeg', 0.8));
+                if (!imageBlob) throw new Error("Falha ao gerar a imagem no telemóvel");
+
+                if (typeof stopCameraFeed === 'function') stopCameraFeed(); // Desliga a luz verde da câmara
+
+                console.log("3. Imagem pronta. A enviar para o Supabase Storage...");
+
+                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+                const uName = localStorage.getItem('userName') || "Anonymous";
+                const timeStr = new Date().getTime();
+                const fileName = `${gCode}_${timeStr}.jpg`;
+
+                // Faz o Upload para o cofre
+                const { data: uploadData, error: uploadError } = await supabase
+                    .storage
+                    .from('treximo-photos')
+                    .upload(fileName, imageBlob, { contentType: 'image/jpeg', upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                console.log("4. Upload feito! A avisar a base de dados (Roleta)...");
+
+                // Pede o Link Público da foto
+                const { data: publicUrlData } = supabase.storage.from('treximo-photos').getPublicUrl(fileName);
+                const publicUrl = publicUrlData.publicUrl;
+
+                // Grava o link na tabela para os outros telemóveis ouvirem
+                const { error: dbError } = await supabase
+                    .from('roulette_spins')
+                    .upsert(
+                        { group_code: gCode, chosen_name: uName, photo_url: publicUrl },
+                        { onConflict: 'group_code' }
+                    );
+
+                if (dbError) throw dbError;
+
+                console.log("5. SUCESSO ABSOLUTO! O Realtime vai mudar os ecrãs agora.");
+
+            } catch (err) {
+                // SE ALGO FALHAR, CAI AQUI!
+                console.error("ERRO FATAL NA CÂMARA:", err);
+                camLoadingOverlay.classList.add('hidden'); // Tira o "A ENVIAR..." da frente
+                alert("Erro ao processar a foto: " + err.message);
+            }
+        }, 100); // Fim da espera do flash
     });
 
+    // --- REWARD EVENT LOGIC ---
+    const rewardBackBtn = document.getElementById('rewardBackBtn');
+    if (rewardBackBtn) {
+        rewardBackBtn.addEventListener('click', () => {
+            showView(viewHome);
+        });
+    }
 
     // --- REVEAL EVENT LOGIC ---
     const revReactionBtns = document.querySelectorAll('.rev-reaction-btn');
@@ -220,17 +408,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAdminStats() {
         try {
-            const { data, error } = await supabase.from('checkins').select('pace');
+            const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+            const { data, error } = await supabase
+                .from('checkins')
+                .select('pace, name')
+                .eq('group_code', gCode);
             if (error) throw error;
 
             let total = data.length;
             let coelho = 0, medio = 0, social = 0, caminhada = 0;
+            let namesCoelho = [], namesMedio = [], namesSocial = [], namesCaminhada = [];
 
             data.forEach(row => {
-                if (row.pace.includes('Coelho')) coelho++;
-                else if (row.pace.includes('Médio')) medio++;
-                else if (row.pace.includes('Social')) social++;
-                else if (row.pace.includes('Caminhada')) caminhada++;
+                const pName = row.name || "Sem Nome";
+                if (row.pace.includes('Coelho')) { coelho++; namesCoelho.push(pName); }
+                else if (row.pace.includes('Médio')) { medio++; namesMedio.push(pName); }
+                else if (row.pace.includes('Social')) { social++; namesSocial.push(pName); }
+                else if (row.pace.includes('Caminhada')) { caminhada++; namesCaminhada.push(pName); }
             });
 
             // Set text counters
@@ -248,6 +442,17 @@ document.addEventListener('DOMContentLoaded', () => {
             fillSocial.style.width = total > 0 ? `${(social / total) * 100}%` : '0%';
             fillCaminhada.style.width = total > 0 ? `${(caminhada / total) * 100}%` : '0%';
 
+            // Set Names Lists
+            const namesCoelhoEl = document.getElementById('names-coelho');
+            const namesMedioEl = document.getElementById('names-medio');
+            const namesSocialEl = document.getElementById('names-social');
+            const namesCaminhadaEl = document.getElementById('names-caminhada');
+
+            if (namesCoelhoEl) namesCoelhoEl.textContent = namesCoelho.join(', ');
+            if (namesMedioEl) namesMedioEl.textContent = namesMedio.join(', ');
+            if (namesSocialEl) namesSocialEl.textContent = namesSocial.join(', ');
+            if (namesCaminhadaEl) namesCaminhadaEl.textContent = namesCaminhada.join(', ');
+
         } catch (err) {
             console.error("Supabase fetch error:", err);
         }
@@ -263,9 +468,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (adminStartBtn) {
-        adminStartBtn.addEventListener('click', () => {
-            alert("SISTEMA ARMADO. A Roleta de coordenadas está ativa para todos os 45 corredores.");
-            showView(viewHome);
+        adminStartBtn.addEventListener('click', async () => {
+            try {
+                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+
+                // 1. Fetch all check-ins for the group
+                const { data, error: fetchError } = await supabase
+                    .from('checkins')
+                    .select('name')
+                    .eq('group_code', gCode);
+
+                if (fetchError) throw fetchError;
+
+                // 2. Validate list
+                if (!data || data.length === 0) {
+                    alert('Nenhum atleta registado neste grupo.');
+                    return;
+                }
+
+                // 3. Pick random victim
+                const randomIndex = Math.floor(Math.random() * data.length);
+                const chosenName = data[randomIndex].name || "Atleta Anonymous";
+
+                // 4. Update or Insert into roulette_spins (A verdadeira Roleta)
+                const { error: insertError } = await supabase
+                    .from('roulette_spins')
+                    .upsert(
+                        { group_code: gCode, chosen_name: chosenName, photo_url: null }, // IMPORTANT: Reset past photos!
+                        { onConflict: 'group_code' }
+                    );
+
+                if (insertError) throw insertError;
+
+                // 5. Alert success
+                alert(`SISTEMA ARMADO. A vítima escolhida foi: ${chosenName}`);
+
+                // 6. Navigate Home
+                showView(viewHome);
+            } catch (err) {
+                console.error("Erro na Roleta:", err);
+                alert("Erro ao rodar a roleta. Verifica a ligação à base de dados.");
+            }
         });
     }
 

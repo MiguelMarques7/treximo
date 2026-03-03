@@ -155,11 +155,17 @@
 .home-bottom-action {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    max-width: 480px;
     padding: 24px;
     background: linear-gradient(to top, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 0));
     z-index: 10;
+}
+
+#view-home.hidden .home-bottom-action {
+    display: none !important;
 }
 
 .home-massive-cta {
@@ -213,19 +219,20 @@
 .home-bottom-sheet {
     position: fixed;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width: 100vw;
+    max-width: 480px;
     background-color: var(--bg-card);
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     padding: 16px 24px 48px;
     z-index: 30;
-    transform: translateY(0);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .home-bottom-sheet.hidden {
-    transform: translateY(100%);
+    transform: translate(-50%, 100%);
     display: block !important;
 }
 
