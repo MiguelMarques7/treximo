@@ -297,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const profileData = {
                     id: currentUser.id,
                     full_name: uName,
+                    avatar_url: currentUser.user_metadata?.avatar_url || '',
                     height_cm: Number(height),
                     weight_kg: Number(weight),
                     pace_avg: paceSeconds,
@@ -324,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const updatePayload = {
                         full_name: uName,
+                        avatar_url: currentUser.user_metadata?.avatar_url || '',
                         height_cm: Number(height),
                         weight_kg: Number(weight),
                         pace_avg: paceSeconds,
