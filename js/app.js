@@ -298,11 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     id: currentUser.id,
                     full_name: uName,
                     avatar_url: currentUser.user_metadata?.avatar_url || '',
-                    height_cm: Number(height),
-                    weight_kg: Number(weight),
-                    pace_avg: paceSeconds,
-                    athlete_level: level,
-                    current_group_code: group
+                    username: currentUser.email?.split('@')[0] || `user_${Date.now()}`,
+                    height_cm: Number(height) || 0,
+                    weight_kg: Number(weight) || 0,
+                    pace_avg: Number(paceSeconds) || 0,
+                    athlete_level: level || 'INICIANTE',
+                    current_group_code: group || 'OFF'
                 };
 
                 console.log("Data being sent to Supabase Profiles:", profileData);
@@ -326,11 +327,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const updatePayload = {
                         full_name: uName,
                         avatar_url: currentUser.user_metadata?.avatar_url || '',
-                        height_cm: Number(height),
-                        weight_kg: Number(weight),
-                        pace_avg: paceSeconds,
-                        athlete_level: level,
-                        current_group_code: group
+                        username: currentUser.email?.split('@')[0] || `user_${Date.now()}`,
+                        height_cm: Number(height) || 0,
+                        weight_kg: Number(weight) || 0,
+                        pace_avg: Number(paceSeconds) || 0,
+                        athlete_level: level || 'INICIANTE',
+                        current_group_code: group || 'OFF'
                     };
 
                     const updateRequest = supabase
