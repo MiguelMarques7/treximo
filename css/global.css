@@ -5,9 +5,9 @@
     --bg-primary: #000000;
     --bg-card: #111111;
     --bg-card-hover: #1A1A1A;
-    --accent-volt: #CCFF00;
+    --accent-volt: #CAFF33;
     --text-main: #FFFFFF;
-    --text-secondary: #A0A0A0;
+    --text-secondary: #555555;
     --safe-top: env(safe-area-inset-top, 20px);
 }
 
@@ -37,11 +37,9 @@ body {
 /* Routing/State Management */
 .spa-view {
     width: 100vw;
-    height: 100vh;
+    min-height: 100dvh;
     max-width: 480px;
-    /* Force mobile dimensions on Desktop/Tablets */
     margin: 0 auto;
-    /* Center it */
     position: absolute;
     top: 0;
     left: 50%;
@@ -51,9 +49,8 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     background-color: var(--bg-primary);
-    /* Ensure bounds are painted */
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-    /* Look nice on desktop */
+    display: flex;
+    flex-direction: column;
 }
 
 .spa-view.hidden {
@@ -85,4 +82,54 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* Admin Trigger Override */
+#adminTriggerBtn {
+    top: 24px;
+    left: auto;
+    right: 24px;
+    font-size: 1.25rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    opacity: 0.5;
+}
+
+/* Reward View */
+#view-reward {
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+#view-reward h2 {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 24px;
+    color: var(--accent-volt);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    text-align: center;
+}
+
+.reward-card {
+    width: 100%;
+    aspect-ratio: 9/16;
+    background-color: var(--bg-card);
+    border-radius: 0;
+    overflow: hidden;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+#rewardImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#rewardBackBtn {
+    width: 100%;
 }

@@ -35,15 +35,52 @@
     <div id="view-onboarding" class="spa-view hidden">
         <main class="onboarding-content">
             <h1 class="onboarding-title">BEM-VINDO</h1>
-            <p class="onboarding-subtitle">INTRODUZ OS TEUS DADOS PARA ENTRAR NO GRUPO.</p>
+            <p class="onboarding-subtitle">ENTRA NA TUA CONTA PARA CONTINUAR.</p>
 
             <div class="onboarding-form">
-                <input type="text" id="onboardingName" class="onboarding-input" placeholder="Teu Nome (ex: Miguel)"
-                    autocomplete="off">
-                <input type="text" id="onboardingGroup" class="onboarding-input"
-                    placeholder="Código do Grupo (ex: TRX01)" autocomplete="off" autocapitalize="characters">
+                <div class="onboarding-inputs-group">
+                    <input type="email" id="authEmail" class="onboarding-input" placeholder="Email">
+                    <input type="password" id="authPassword" class="onboarding-input" placeholder="Password">
+                </div>
 
-                <button id="onboardingSubmit" class="onboarding-btn">ENTRAR NO GRUPO</button>
+                <div class="onboarding-bottom-actions">
+                    <button id="loginEmailBtn" class="onboarding-btn">ENTRAR</button>
+                    <button id="registerEmailBtn" class="text-link">Não tens conta? Registar</button>
+
+                    <div class="auth-divider">
+                        <span class="auth-divider-text">OU</span>
+                    </div>
+
+                    <button id="loginGoogleBtn" class="outline-btn">Continuar com o Google</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="view-complete-profile" class="spa-view hidden">
+        <main class="onboarding-content">
+            <h1 class="onboarding-title">QUASE LÁ</h1>
+            <p class="onboarding-subtitle">PREENCHE O TEU PERFIL PARA ENTRAR NO GRUPO.</p>
+
+            <div class="onboarding-form">
+                <input type="number" id="profileHeight" class="onboarding-input" placeholder="Altura (cm) - ex: 175"
+                    autocomplete="off" required>
+                <input type="number" id="profileWeight" class="onboarding-input" placeholder="Peso (kg) - ex: 70"
+                    autocomplete="off" required>
+                <input type="text" id="profilePace" class="onboarding-input" placeholder="Pace Médio - ex: 05:30"
+                    autocomplete="off" required>
+
+                <select id="profileLevel" class="onboarding-input" required>
+                    <option value="" disabled selected>Nível de Atleta</option>
+                    <option value="Iniciante">Iniciante</option>
+                    <option value="Intermédio">Intermédio</option>
+                    <option value="Avançado">Avançado</option>
+                </select>
+
+                <input type="text" id="profileGroup" class="onboarding-input" placeholder="Código do Grupo (ex: TRX01)"
+                    autocomplete="off" autocapitalize="characters" required>
+
+                <button id="saveProfileBtn" class="onboarding-btn">Guardar e Entrar</button>
             </div>
         </main>
     </div>
@@ -53,8 +90,7 @@
             <button class="home-nav-tab text-secondary">FY</button>
             <button class="home-nav-tab active">GRUPO</button>
 
-            <button id="adminTriggerBtn" class="dev-trigger-btn"
-                style="top: 24px; left: auto; right: 24px; font-size: 1.25rem; background: transparent; border: none; padding: 0; opacity: 0.5;">
+            <button id="adminTriggerBtn" class="dev-trigger-btn">
                 ⚙️
             </button>
         </header>
@@ -115,9 +151,8 @@
     </div>
 
     <div id="view-camera" class="spa-view hidden">
-        <video id="camVideoFeed" autoplay playsinline muted
-            style="width: 100%; height: 100%; object-fit: cover;"></video>
-        <canvas id="camCanvas" class="hidden" style="display: none;"></canvas>
+        <video id="camVideoFeed" autoplay playsinline muted></video>
+        <canvas id="camCanvas" class="hidden"></canvas>
 
         <header class="cam-hud-header">
             <div class="cam-timer-warning">
@@ -153,17 +188,12 @@
         </div>
     </div>
 
-    <div id="view-reward" class="spa-view hidden"
-        style="background-color: var(--bg-primary); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
-        <h2
-            style="font-size: 2rem; font-weight: 900; margin-bottom: 24px; color: var(--accent-volt); text-transform: uppercase; letter-spacing: -1px;">
-            Missão Cumprida</h2>
-        <div
-            style="width: 90%; max-width: 400px; aspect-ratio: 9/16; background-color: var(--bg-card); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-            <img id="rewardImage" src="" alt="Foto de Grupo" style="width: 100%; height: 100%; object-fit: cover;" />
+    <div id="view-reward" class="spa-view hidden">
+        <h2>Missão Cumprida</h2>
+        <div class="reward-card">
+            <img id="rewardImage" src="" alt="Foto de Grupo" />
         </div>
-        <button id="rewardBackBtn" class="onboarding-btn" style="width: 90%; max-width: 400px; margin-top: 32px;">VOLTAR
-            AO FEED</button>
+        <button id="rewardBackBtn" class="onboarding-btn">VOLTAR AO FEED</button>
     </div>
 
     <div id="view-reveal" class="spa-view hidden">
@@ -290,10 +320,10 @@
                     <div class="admin-pace-names" id="names-coelho"></div>
                 </div>
 
-                <div class="admin-pace-item">
+                <div class="admin-pace-item active-pace">
                     <div class="admin-pace-header">
-                        <span style="color: var(--accent-volt);">Médio (5:00 - 6:00)</span>
-                        <span class="admin-pace-count" style="color: var(--accent-volt);">20</span>
+                        <span>Médio (5:00 - 6:00)</span>
+                        <span class="admin-pace-count">20</span>
                     </div>
                     <div class="admin-progress-bg">
                         <div class="admin-progress-fill fill-medio"></div>

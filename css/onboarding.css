@@ -1,9 +1,7 @@
-/* Onboarding View Styles */
-#view-onboarding {
+/* Onboarding & Profile Flow Views */
+#view-onboarding,
+#view-complete-profile {
     background-color: var(--bg-primary);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     padding: 24px;
 }
 
@@ -11,7 +9,7 @@
     display: flex;
     flex-direction: column;
     gap: 32px;
-    margin-top: -15vh;
+    flex-grow: 1;
 }
 
 .onboarding-title {
@@ -33,18 +31,30 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    flex-grow: 1;
 }
 
 .onboarding-input {
-    background-color: var(--bg-card);
+    background-color: #1A1A1A;
     border: 1px solid #333;
-    border-radius: 8px;
-    padding: 16px;
+    padding: 16px 20px;
     font-family: inherit;
     font-size: 1rem;
     color: var(--text-main);
     outline: none;
     transition: border-color 0.2s;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    /* for cross-browser select consistency */
+    appearance: none;
+}
+
+select.onboarding-input {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23555555'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 24px;
 }
 
 .onboarding-input:focus {
@@ -63,14 +73,95 @@
     font-weight: 900;
     font-size: 1.1rem;
     border: none;
-    border-radius: 8px;
-    padding: 18px;
-    margin-top: 16px;
+    border-radius: 99px;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    margin-top: auto;
+    margin-bottom: 24px;
     cursor: pointer;
     text-align: center;
+    text-transform: uppercase;
     transition: opacity 0.2s;
 }
 
 .onboarding-btn:active {
     opacity: 0.8;
+}
+
+.onboarding-inputs-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.onboarding-bottom-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.onboarding-bottom-actions .onboarding-btn {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 20px;
+}
+
+.text-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    margin-top: -8px;
+    transition: color 0.2s;
+}
+
+.text-link:hover {
+    color: var(--text-main);
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 8px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #333;
+}
+
+.auth-divider-text {
+    padding: 0 16px;
+    color: #555555;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.outline-btn {
+    background-color: transparent;
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 2px solid #333;
+    border-radius: 99px;
+    padding: 18px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.outline-btn:active {
+    background-color: #1A1A1A;
+    border-color: #555;
 }

@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewCamera = document.getElementById('view-camera');
     const viewReveal = document.getElementById('view-reveal');
     const viewOnboarding = document.getElementById('view-onboarding');
+    const viewCompleteProfile = document.getElementById('view-complete-profile');
     const viewReward = document.getElementById('view-reward');
 
     function showView(viewElement) {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const viewAdmin = document.getElementById('view-admin');
         if (viewAdmin) viewAdmin.classList.add('hidden');
         if (viewOnboarding) viewOnboarding.classList.add('hidden');
+        if (viewCompleteProfile) viewCompleteProfile.classList.add('hidden');
         if (viewReward) viewReward.classList.add('hidden');
 
         // Show target
@@ -30,98 +32,247 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50); // slight delay for smooth transition setup
     }
 
-    // --- INIT APP LOGIC ---
-    const storedName = localStorage.getItem('userName');
-    const storedGroup = localStorage.getItem('groupCode');
+    // --- AUTHENTICATION & ROUTING LOGIC ---
+    let currentUser = null;
+    let currentProfile = null;
 
-    if (!storedName || !storedGroup) {
-        viewOnboarding.classList.remove('hidden');
-        viewHome.classList.add('hidden');
-    } else {
-        viewHome.classList.remove('hidden');
-        viewOnboarding.classList.add('hidden');
+    async function checkUserProfile(userId) {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error("Profile fetch error:", error);
+                return null;
+            }
+            return data;
+        } catch (err) {
+            console.error("Profile check failed:", err);
+            return null;
+        }
     }
 
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!session) {
+            // No user logged in
+            currentUser = null;
+            currentProfile = null;
+            localStorage.removeItem('userName');
+            localStorage.removeItem('groupCode');
+            showView(viewOnboarding);
+            return;
+        }
+
+        currentUser = session.user;
+        const profile = await checkUserProfile(currentUser.id);
+
+        if (!profile || !profile.height_cm || !profile.current_group_code) {
+            // Incomplete profile
+            showView(viewCompleteProfile);
+        } else {
+            // Complete profile
+            currentProfile = profile;
+
+            // Reconnect Realtime Roulette Listener on Auth Success
+            connectRouletteListener(profile.current_group_code, profile.full_name);
+            showView(viewHome);
+        }
+    });
+
     // --- SUPABASE REALTIME (ROLETA) ---
-    if (storedName && storedGroup) {
+    function connectRouletteListener(userGroup, userName) {
+        const uName = userName || (currentUser?.user_metadata?.full_name) || "Atleta";
+        const groupCode = userGroup || "NO_GROUP";
+
+        // Avoid duplicate subscriptions
+        supabase.removeAllChannels();
+
         supabase.channel('public:roulette_spins')
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'roulette_spins' },
-                (payload) => handleRoletaEvent(payload)
+                (payload) => handleRoletaEvent(payload, uName, groupCode)
             )
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'roulette_spins' },
-                (payload) => handleRoletaEvent(payload)
+                (payload) => handleRoletaEvent(payload, uName, groupCode)
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log('Realtime ligado para a Roleta no grupo:', storedGroup);
+                    console.log('Realtime ligado para a Roleta no grupo:', groupCode);
                 }
             });
+    }
 
-        function handleRoletaEvent(payload) {
-            const newRow = payload.new;
+    function handleRoletaEvent(payload, activeUserName, activeGroupCode) {
+        const newRow = payload.new;
 
-            // Ignore if it's for another group
-            if (newRow.group_code !== storedGroup) return;
+        // Ignore if it's for another group
+        if (newRow.group_code !== activeGroupCode) return;
 
-            // REWARD BROADCAST MATCH (IF PHOTO EXISTS)
-            if (newRow.photo_url) {
-                const rewardImg = document.getElementById('rewardImage');
-                if (rewardImg) rewardImg.src = newRow.photo_url;
+        // REWARD BROADCAST MATCH (IF PHOTO EXISTS)
+        if (newRow.photo_url) {
+            const rewardImg = document.getElementById('rewardImage');
+            if (rewardImg) rewardImg.src = newRow.photo_url;
 
-                showView(viewReward);
-                return;
+            showView(viewReward);
+            return;
+        }
+
+        // SELECTION BROADCAST MATCH
+        if (newRow.chosen_name === activeUserName) {
+            // VICTIM FLOW
+            showView(viewCamera);
+            startCameraFeed(); // Mount the UserMedia feed
+
+            // Show notification briefly without native alert for better UX
+            const toast = document.getElementById('globalToast');
+            if (toast) {
+                toast.textContent = "FOSTE ESCOLHIDO! Tira a foto!";
+                toast.classList.remove('hidden');
+                toast.style.backgroundColor = 'var(--text-main)';
+                toast.style.color = 'var(--bg-primary)';
+
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                    toast.style.backgroundColor = '';
+                    toast.style.color = '';
+                }, 4000);
             }
 
-            // SELECTION BROADCAST MATCH
-            if (newRow.chosen_name === storedName) {
-                // VICTIM FLOW
-                showView(viewCamera);
-                startCameraFeed(); // Mount the UserMedia feed
-
-                // Show notification briefly without native alert for better UX
-                const toast = document.getElementById('globalToast');
-                if (toast) {
-                    toast.textContent = "FOSTE ESCOLHIDO! Tira a foto!";
-                    toast.classList.remove('hidden');
-                    toast.style.backgroundColor = 'var(--text-main)';
-                    toast.style.color = 'var(--bg-primary)';
-
-                    setTimeout(() => {
-                        toast.classList.add('hidden');
-                        toast.style.backgroundColor = '';
-                        toast.style.color = '';
-                    }, 4000);
-                }
-
-                // Trigger camera start logic (mocked logic already exists, we start countdown)
-                startCameraCountdown();
-            } else {
-                // OTHER USERS FLOW
-                // Don't alert if we're just updating the photo_url payload (which starts the reward broadcast)
-                if (!newRow.photo_url) {
-                    alert(`O Capitão escolheu: ${newRow.chosen_name}! Prepara-te para a foto de grupo.`);
-                }
+            // Trigger camera start logic (mocked logic already exists, we start countdown)
+            startCameraCountdown();
+        } else {
+            // OTHER USERS FLOW
+            // Don't alert if we're just updating the photo_url payload (which starts the reward broadcast)
+            if (!newRow.photo_url) {
+                alert(`O Capitão escolheu: ${newRow.chosen_name}! Prepara-te para a foto de grupo.`);
             }
         }
     }
 
-    // --- ONBOARDING EVENT LOGIC ---
-    const onboardingSubmit = document.getElementById('onboardingSubmit');
-    if (onboardingSubmit) {
-        onboardingSubmit.addEventListener('click', () => {
-            const nameInput = document.getElementById('onboardingName').value.trim();
-            const groupInput = document.getElementById('onboardingGroup').value.trim().toUpperCase();
+    // --- ONBOARDING & PROFILE EVENT LOGIC ---
+    const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+    const loginEmailBtn = document.getElementById('loginEmailBtn');
+    const registerEmailBtn = document.getElementById('registerEmailBtn');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
 
-            if (nameInput && groupInput) {
-                localStorage.setItem('userName', nameInput);
-                localStorage.setItem('groupCode', groupInput);
+    if (loginGoogleBtn) {
+        loginGoogleBtn.addEventListener('click', async () => {
+            console.log('Google button clicked');
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google'
+                });
+                if (error) throw error;
+            } catch (err) {
+                console.error("Google Login failed:", err);
+                alert(err.message || "Erro ao inciar sessão com o Google.");
+            }
+        });
+    } else {
+        console.error('Google Btn missing');
+    }
+
+    if (loginEmailBtn) {
+        loginEmailBtn.addEventListener('click', async () => {
+            console.log('Login Email button clicked');
+            const email = authEmail?.value.trim();
+            const password = authPassword?.value;
+            if (!email || !password) return alert('Preenche o email e a password.');
+
+            loginEmailBtn.textContent = 'A ENTRAR...';
+            try {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+            } catch (err) {
+                console.error("Email Login failed:", err);
+                alert(err.message);
+            } finally {
+                loginEmailBtn.textContent = 'ENTRAR';
+            }
+        });
+    } else {
+        console.error('Email Login Btn missing');
+    }
+
+    if (registerEmailBtn) {
+        registerEmailBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            console.log('Register Email button clicked');
+            const email = authEmail?.value.trim();
+            const password = authPassword?.value;
+            if (!email || !password) return alert('Preenche o email e a password para registar.');
+
+            try {
+                const { error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                alert('Registo com sucesso! Verifica o teu email.');
+            } catch (err) {
+                console.error("Registration failed:", err);
+                alert(err.message);
+            }
+        });
+    } else {
+        console.error('Register Email Btn missing');
+    }
+
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    if (saveProfileBtn) {
+        saveProfileBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const height = document.getElementById('profileHeight').value;
+            const weight = document.getElementById('profileWeight').value;
+            const pace = document.getElementById('profilePace').value;
+            const level = document.getElementById('profileLevel').value;
+            let group = document.getElementById('profileGroup').value;
+
+            if (!height || !weight || !pace || !level || !group) {
+                alert('Preenche todos os campos corretamente.');
+                return;
+            }
+
+            group = group.trim().toUpperCase();
+
+            saveProfileBtn.textContent = 'A Guardar...';
+            saveProfileBtn.disabled = true;
+
+            try {
+                // Determine full name from metadata if possible
+                const uName = currentUser.user_metadata?.full_name || "Atleta";
+
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        height_cm: parseInt(height),
+                        weight_kg: parseFloat(weight),
+                        pace_avg: pace,
+                        athlete_level: level,
+                        current_group_code: group
+                    })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+
+                // Update Local Storage
+                localStorage.setItem('userName', uName);
+                localStorage.setItem('groupCode', group);
+
+                // Transition to Home
                 showView(viewHome);
-            } else {
-                alert('Por favor, preenche o teu Nome e Código do Grupo.');
+
+            } catch (err) {
+                console.error("Profile save error:", err);
+                alert("Erro ao guardar o perfil.");
+            } finally {
+                saveProfileBtn.textContent = 'Guardar e Entrar';
+                saveProfileBtn.disabled = false;
             }
         });
     }
@@ -178,8 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Insert to Supabase Checkins Table
             try {
-                const uName = localStorage.getItem('userName') || "Atleta Anonymous";
-                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+                const uName = (currentProfile?.full_name) || (currentUser?.user_metadata?.full_name) || "Atleta Anonymous";
+                const gCode = (currentProfile?.current_group_code) || "NO_GROUP";
 
                 const { error } = await supabase.from('checkins').insert([
                     { pace: selectedPace, name: uName, group_code: gCode }
@@ -276,8 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 console.log("3. Imagem pronta. A enviar para o Supabase Storage...");
 
-                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
-                const uName = localStorage.getItem('userName') || "Anonymous";
+                const gCode = (currentProfile?.current_group_code) || "NO_GROUP";
+                const uName = (currentProfile?.full_name) || (currentUser?.user_metadata?.full_name) || "Anonymous";
                 const timeStr = new Date().getTime();
                 const fileName = `${gCode}_${timeStr}.jpg`;
 
@@ -408,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadAdminStats() {
         try {
-            const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+            const gCode = (currentProfile?.current_group_code) || "NO_GROUP";
             const { data, error } = await supabase
                 .from('checkins')
                 .select('pace, name')
@@ -470,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminStartBtn) {
         adminStartBtn.addEventListener('click', async () => {
             try {
-                const gCode = localStorage.getItem('groupCode') || "NO_GROUP";
+                const gCode = (currentProfile?.current_group_code) || "NO_GROUP";
 
                 // 1. Fetch all check-ins for the group
                 const { data, error: fetchError } = await supabase
