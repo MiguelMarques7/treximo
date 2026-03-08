@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentProfile = null;
 
     async function checkUserProfile(userId) {
+        if (!userId) return null;
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -45,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 .eq('id', userId)
                 .single();
 
-            if (error) {
+            // PGRST116 means zero rows found, totally normal for new signups
+            if (error && error.code !== 'PGRST116') {
                 console.error("Profile fetch error:", error);
                 return null;
             }
@@ -57,29 +59,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!session) {
-            // No user logged in
-            currentUser = null;
-            currentProfile = null;
-            localStorage.removeItem('userName');
-            localStorage.removeItem('groupCode');
-            showView(viewOnboarding);
-            return;
-        }
+        try {
+            if (!session) {
+                // No user logged in
+                currentUser = null;
+                currentProfile = null;
+                localStorage.removeItem('userName');
+                localStorage.removeItem('groupCode');
 
-        currentUser = session.user;
-        const profile = await checkUserProfile(currentUser.id);
+                // If the URL has a payload but no session rendered, they might be in auth transition
+                if (window.location.hash.includes('access_token')) {
+                    console.log("Auth callback detected, waiting for session resolution...");
+                    return;
+                }
 
-        if (!profile || !profile.height_cm || !profile.current_group_code) {
-            // Incomplete profile
+                showView(viewOnboarding);
+                return;
+            }
+
+            currentUser = session.user;
+            const profile = await checkUserProfile(currentUser?.id);
+
+            // If profile query fails, completely empty, or lacks explicit specs, force them to complete onboarding
+            if (!profile || !profile?.height_cm || !profile?.current_group_code) {
+                console.log("Profile incomplete or missing. Routing to Complete Profile view.");
+                showView(viewCompleteProfile);
+            } else {
+                // Complete profile
+                currentProfile = profile;
+
+                // Reconnect Realtime Roulette Listener on Auth Success
+                connectRouletteListener(profile?.current_group_code, profile?.full_name);
+                showView(viewHome);
+            }
+        } catch (err) {
+            console.error("Critical Auth Router Crash:", err);
+            // Absolute emergency fallback
             showView(viewCompleteProfile);
-        } else {
-            // Complete profile
-            currentProfile = profile;
-
-            // Reconnect Realtime Roulette Listener on Auth Success
-            connectRouletteListener(profile.current_group_code, profile.full_name);
-            showView(viewHome);
         }
     });
 
