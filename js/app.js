@@ -67,23 +67,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('userName');
                 localStorage.removeItem('groupCode');
 
-                // If the URL has a payload but no session rendered, they might be in auth transition
+                // If the URL has a payload but no session rendered, we don't silence it permanently anymore
                 if (window.location.hash.includes('access_token')) {
-                    console.log("Auth callback detected, waiting for session resolution...");
+                    console.log("Auth callback detected, forcing session resolution mapping...");
+                    // Let Supabase natively compile the hash into the next event cycle without blocking the UI structurally
+                } else {
+                    showView(viewOnboarding);
                     return;
                 }
-
-                showView(viewOnboarding);
-                return;
             }
+
+            // At this point auth is either processing or valid. Re-check safely:
+            if (!session) return;
 
             currentUser = session.user;
             const profile = await checkUserProfile(currentUser?.id);
 
             // If profile query fails, completely empty, or lacks explicit specs, force them to complete onboarding
             if (!profile || !profile?.height_cm || !profile?.current_group_code) {
-                console.log("Profile incomplete or missing. Routing to Complete Profile view.");
-                showView(viewCompleteProfile);
+                console.log("State: User authenticated, no profile found. Forcing Profile View.");
+
+                // Explicitly unhide the block bypassing the router if needed
+                if (viewCompleteProfile) {
+                    viewCompleteProfile.classList.remove('hidden');
+                    showView(viewCompleteProfile);
+                }
             } else {
                 // Complete profile
                 currentProfile = profile;
@@ -95,7 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error("Critical Auth Router Crash:", err);
             // Absolute emergency fallback
-            showView(viewCompleteProfile);
+            if (viewCompleteProfile) {
+                viewCompleteProfile.classList.remove('hidden');
+                showView(viewCompleteProfile);
+            }
         }
     });
 
