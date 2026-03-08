@@ -285,12 +285,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Determine full name from metadata if possible
                 const uName = currentUser.user_metadata?.full_name || "Atleta";
 
+                // Parse pace "MM:SS" into total integer seconds to prevent 400 Bad Request on numeric columns
+                let paceSeconds = 0;
+                if (pace.includes(':')) {
+                    const [m, s] = pace.split(':');
+                    paceSeconds = (parseInt(m) || 0) * 60 + (parseInt(s) || 0);
+                } else {
+                    paceSeconds = Number(pace) || 0;
+                }
+
                 const profileData = {
                     id: currentUser.id,
                     full_name: uName,
                     height_cm: Number(height),
                     weight_kg: Number(weight),
-                    pace_avg: pace,
+                    pace_avg: paceSeconds,
                     athlete_level: level,
                     current_group_code: group
                 };
