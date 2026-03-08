@@ -91,6 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (viewCompleteProfile) {
                     viewCompleteProfile.classList.remove('hidden');
                     showView(viewCompleteProfile);
+                } else {
+                    console.error("DOM WARNING: viewCompleteProfile missing. Pushing to Onboarding.");
+                    showView(viewOnboarding);
                 }
             } else {
                 // Complete profile
@@ -106,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (viewCompleteProfile) {
                 viewCompleteProfile.classList.remove('hidden');
                 showView(viewCompleteProfile);
+            } else if (viewOnboarding) {
+                showView(viewOnboarding);
             }
         }
     });
@@ -278,19 +283,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Determine full name from metadata if possible
                 const uName = currentUser.user_metadata?.full_name || "Atleta";
 
+                const profileData = {
+                    id: currentUser.id,
+                    full_name: uName,
+                    height_cm: Number(height),
+                    weight_kg: Number(weight),
+                    pace_avg: pace,
+                    athlete_level: level,
+                    current_group_code: group
+                };
+
+                console.log("Data being sent to Supabase Profiles:", profileData);
+
                 const { error } = await supabase
                     .from('profiles')
-                    .upsert({
-                        id: currentUser.id,
-                        full_name: uName,
-                        height_cm: parseInt(height),
-                        weight_kg: parseFloat(weight),
-                        pace_avg: pace,
-                        athlete_level: level,
-                        current_group_code: group
-                    });
+                    .upsert(profileData);
 
-                if (error) throw error;
+                if (error) {
+                    console.error("Full Supabase Error:", error);
+                    throw error;
+                }
 
                 // Update Local Storage
                 localStorage.setItem('userName', uName);
@@ -300,8 +312,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showView(viewHome);
 
             } catch (err) {
-                console.error("Profile save error:", err);
-                alert("Erro ao guardar o perfil.");
+                console.error("Profile save error wrapper caught:", err);
+                alert("Erro ao guardar o perfil. Verifica a consola para mais destalhes.");
             } finally {
                 saveProfileBtn.textContent = 'Guardar e Entrar';
                 saveProfileBtn.disabled = false;
