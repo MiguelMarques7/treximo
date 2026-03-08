@@ -305,18 +305,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 console.log("Data being sent to Supabase Profiles:", profileData);
-                console.log('A iniciar UPSERT no Supabase...');
+                console.log('A iniciar INSERT no Supabase...');
 
                 // Protect against silent network hangs: race Supabase against a 5-second timeout
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("O pedido ao Supabase demorou mais de 5 segundos a responder. Timeout!")), 5000)
                 );
 
-                const supabaseRequest = supabase
+                let supabaseRequest = supabase
                     .from('profiles')
-                    .upsert(profileData);
+                    .insert(profileData);
 
-                const { error } = await Promise.race([supabaseRequest, timeoutPromise]);
+                let { error } = await Promise.race([supabaseRequest, timeoutPromise]);
+
+                // Se o erro for de conflito (já existe), tentamos o UPDATE diretamente
+                if (error && (error.code === '23505' || error.message?.toLowerCase().includes('duplicate') || error.message?.toLowerCase().includes('already exists'))) {
+                    console.log('Perfil já existe (Insert falhou com conflito). A tentar UPDATE explicito...');
+
+                    const updatePayload = {
+                        full_name: uName,
+                        height_cm: Number(height),
+                        weight_kg: Number(weight),
+                        pace_avg: paceSeconds,
+                        athlete_level: level,
+                        current_group_code: group
+                    };
+
+                    const updateRequest = supabase
+                        .from('profiles')
+                        .update(updatePayload)
+                        .eq('id', currentUser.id);
+
+                    const updateResult = await Promise.race([updateRequest, timeoutPromise]);
+                    error = updateResult.error;
+                }
 
                 if (error) {
                     console.error("Full Supabase Error:", error);
