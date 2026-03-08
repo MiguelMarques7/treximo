@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("Current URL:", window.location.href);
 
     // --- SUPABASE CONFIG ---
     const supabaseUrl = 'https://uslkwgjhiokbveaegsbn.supabase.co';
@@ -169,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: 'https://miguelmarques7.github.io/treximo/'
+                        redirectTo: 'https://miguelmarques7.github.io/treximo/index.html'
                     }
                 });
                 if (error) throw error;
@@ -252,14 +253,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const { error } = await supabase
                     .from('profiles')
-                    .update({
+                    .upsert({
+                        id: currentUser.id,
+                        full_name: uName,
                         height_cm: parseInt(height),
                         weight_kg: parseFloat(weight),
                         pace_avg: pace,
                         athlete_level: level,
                         current_group_code: group
-                    })
-                    .eq('id', currentUser.id);
+                    });
 
                 if (error) throw error;
 
