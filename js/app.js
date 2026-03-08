@@ -305,10 +305,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 console.log("Data being sent to Supabase Profiles:", profileData);
+                console.log('A iniciar UPSERT no Supabase...');
 
-                const { error } = await supabase
+                // Protect against silent network hangs: race Supabase against a 5-second timeout
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("O pedido ao Supabase demorou mais de 5 segundos a responder. Timeout!")), 5000)
+                );
+
+                const supabaseRequest = supabase
                     .from('profiles')
                     .upsert(profileData);
+
+                const { error } = await Promise.race([supabaseRequest, timeoutPromise]);
 
                 if (error) {
                     console.error("Full Supabase Error:", error);
