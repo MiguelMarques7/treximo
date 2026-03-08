@@ -79,20 +79,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             currentUser = session.user;
+
+            // EMERGENCY FIX: FORCE RENDER BEFORE AWAITING DB TO PREVENT BLACK SCREEN
+            console.log("A forçar exibição do formulário de perfil...");
+            if (viewCompleteProfile) {
+                viewCompleteProfile.classList.remove('hidden');
+                showView(viewCompleteProfile);
+            } else {
+                showView(viewOnboarding);
+            }
+
             const profile = await checkUserProfile(currentUser?.id);
 
-            // Se a consulta à tabela profiles retornar erro ou vier vazia, chama IMEDIATAMENTE view-complete-profile
+            // Se a consulta à tabela profiles retornar erro ou vier vazia, já estamos no ecrã certo
             if (!profile || !profile?.height_cm || !profile?.current_group_code) {
-                console.log("State: User authenticated, no profile found. Forcing Profile View.");
-
-                if (viewCompleteProfile) {
-                    viewCompleteProfile.classList.remove('hidden');
-                    showView(viewCompleteProfile);
-                } else {
-                    showView(viewOnboarding);
-                }
-
-                // Nunca deixes a função terminar sem chamar um showView
+                console.log("State: User authenticated, no profile found. Keeping Profile View open.");
+                // Nunca deixes a função terminar sem chamar um showView (já chamámos acima)
                 return;
             }
 
