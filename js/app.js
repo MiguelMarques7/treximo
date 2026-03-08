@@ -60,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     supabase.auth.onAuthStateChange(async (event, session) => {
         try {
+            console.log("Sessão detetada, a carregar perfil...");
+
             if (!session) {
                 // No user logged in
                 currentUser = null;
@@ -67,45 +69,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.removeItem('userName');
                 localStorage.removeItem('groupCode');
 
-                // If the URL has a payload but no session rendered, we don't silence it permanently anymore
                 if (window.location.hash.includes('access_token')) {
                     console.log("Auth callback detected, forcing session resolution mapping...");
-                    // Let Supabase natively compile the hash into the next event cycle without blocking the UI structurally
-                } else {
-                    showView(viewOnboarding);
-                    return;
                 }
-            }
 
-            // At this point auth is either processing or valid. Re-check safely:
-            if (!session) return;
+                // Never leave a black screen. Unconditionally show onboarding if session is null.
+                showView(viewOnboarding);
+                return;
+            }
 
             currentUser = session.user;
             const profile = await checkUserProfile(currentUser?.id);
 
-            // If profile query fails, completely empty, or lacks explicit specs, force them to complete onboarding
+            // Se a consulta à tabela profiles retornar erro ou vier vazia, chama IMEDIATAMENTE view-complete-profile
             if (!profile || !profile?.height_cm || !profile?.current_group_code) {
                 console.log("State: User authenticated, no profile found. Forcing Profile View.");
 
-                // Explicitly unhide the block bypassing the router if needed
                 if (viewCompleteProfile) {
                     viewCompleteProfile.classList.remove('hidden');
                     showView(viewCompleteProfile);
                 } else {
-                    console.error("DOM WARNING: viewCompleteProfile missing. Pushing to Onboarding.");
                     showView(viewOnboarding);
                 }
-            } else {
-                // Complete profile
-                currentProfile = profile;
 
-                // Reconnect Realtime Roulette Listener on Auth Success
-                connectRouletteListener(profile?.current_group_code, profile?.full_name);
-                showView(viewHome);
+                // Nunca deixes a função terminar sem chamar um showView
+                return;
             }
+
+            // Complete profile
+            currentProfile = profile;
+
+            // Reconnect Realtime Roulette Listener on Auth Success
+            connectRouletteListener(profile?.current_group_code, profile?.full_name);
+            showView(viewHome);
+
         } catch (err) {
             console.error("Critical Auth Router Crash:", err);
-            // Absolute emergency fallback
+            // Absolute emergency fallback ensures screen never stays black
             if (viewCompleteProfile) {
                 viewCompleteProfile.classList.remove('hidden');
                 showView(viewCompleteProfile);
